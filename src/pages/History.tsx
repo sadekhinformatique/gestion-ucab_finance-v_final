@@ -513,9 +513,9 @@ export default function History() {
                     </td>
                     <td className="px-5 py-4 text-center">
                       <span className={`px-2.5 py-1 inline-flex text-[10px] font-bold tracking-wide rounded-full whitespace-nowrap ${
-                        t.displayStatus === 'approved' || t.displayStatus === 'validated_president' || t.displayStatus === 'Validé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-orange-100 text-orange-700 border border-orange-200'
-                      }`}>
-                        {t.displayStatus === 'approved' || t.displayStatus === 'validated_president' ? 'Validé' : t.displayStatus}
+                         t.displayStatus === 'approved' || t.displayStatus === 'validated_president' || t.displayStatus === 'converted' || t.displayStatus === 'Validé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-orange-100 text-orange-700 border border-orange-200'
+                       }`}>
+                         {t.displayStatus === 'approved' || t.displayStatus === 'validated_president' || t.displayStatus === 'converted' ? 'Validé' : t.displayStatus}
                       </span>
                     </td>
                     <td className={`px-5 py-4 text-right font-bold whitespace-nowrap ${t.isIncome ? 'text-emerald-600' : 'text-slate-700'}`}>
@@ -581,9 +581,9 @@ export default function History() {
                    </p>
                    <div className="mt-3">
                      <span className={`px-3 py-1 inline-flex text-xs font-bold tracking-wide rounded-full ${
-                        selectedTx.displayStatus === 'approved' || selectedTx.displayStatus === 'validated_president' || selectedTx.displayStatus === 'Validé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-orange-100 text-orange-700 border border-orange-200'
-                      }`}>
-                        {selectedTx.displayStatus === 'approved' || selectedTx.displayStatus === 'validated_president' ? 'Validé et Compta. à jour' : selectedTx.displayStatus}
+                         selectedTx.displayStatus === 'approved' || selectedTx.displayStatus === 'validated_president' || selectedTx.displayStatus === 'converted' || selectedTx.displayStatus === 'Validé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-orange-100 text-orange-700 border border-orange-200'
+                       }`}>
+                         {selectedTx.displayStatus === 'approved' || selectedTx.displayStatus === 'validated_president' || selectedTx.displayStatus === 'converted' ? 'Validé et Compta. à jour' : selectedTx.displayStatus}
                      </span>
                    </div>
                 </div>

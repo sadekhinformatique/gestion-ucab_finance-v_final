@@ -3,10 +3,14 @@ import { Upload, Info, Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
 import { logAction } from "../lib/audit";
+import { Navigate } from "react-router-dom";
 
 export default function NewRequest() {
-//... same hooks ...
   const { profile } = useAuth();
+
+  if (profile?.role?.toLowerCase() === "commissaire") {
+    return <Navigate to="/dashboard" replace />;
+  }
   const [categories, setCategories] = useState<any[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");

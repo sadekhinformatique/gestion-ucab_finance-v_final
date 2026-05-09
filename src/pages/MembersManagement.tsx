@@ -7,7 +7,7 @@ type TabType = "membres" | "filieres" | "categories";
 
 export default function MembersManagement() {
   const { profile } = useAuth();
-  const isAdmin = profile?.role?.toLowerCase() === "admin" || profile?.role?.toLowerCase() === "présidente" || profile?.role?.toLowerCase() === "trésorier";
+  const isAdmin = profile?.role?.toLowerCase() === "admin";
 
   const [activeTab, setActiveTab] = useState<TabType>("membres");
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,24 @@ export default function MembersManagement() {
   const [fName, setFName] = useState("");
   const [fLevels, setFLevels] = useState("L1, L2, L3");
   const [cName, setCName] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [tempPwd, setTempPwd] = useState("");
+  const [createCard, setCreateCard] = useState("");
+  const [createFirstName, setCreateFirstName] = useState("");
+  const [createLastName, setCreateLastName] = useState("");
+  const [createFiliere, setCreateFiliere] = useState("");
+  const [createNiveau, setCreateNiveau] = useState("");
+  const [createRole, setCreateRole] = useState("Membre");
+  const [createdResult, setCreatedResult] = useState<string | null>(null);
+  const [threshold, setThreshold] = useState(50000);
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
+  const [thresholdInput, setThresholdInput] = useState("50000");
+
+  useEffect(() => {
+    supabase.from('app_config').select('value').eq('key', 'significant_expense_threshold').single().then(({ data }) => {
+      if (data) { setThreshold(Number(data.value)); setThresholdInput(data.value); }
+    });
+  }, []);
 
   useEffect(() => {
     if (isAdmin) { fetchData(); }
@@ -139,8 +157,8 @@ export default function MembersManagement() {
         <p className="font-body-md text-on-surface-variant">Gestion des membres, filières et catégories</p>
       </div>
 
-      <div className="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
-        <div className="flex-1 relative">
+      <div className="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex-wrap">
+        <div className="flex-1 relative min-w-[200px]">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un membre..."
             className="w-full pl-10 pr-4 py-2 bg-surface-bright border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
@@ -155,6 +173,11 @@ export default function MembersManagement() {
           <option value="">Tous rôles</option>
           <option>Membre</option><option>Admin</option><option>Trésorier</option><option>Président</option><option>Commissaire</option>
         </select>
+        <button onClick={() => { setThresholdInput(threshold.toString()); setShowThresholdModal(true); }}
+          className="flex items-center gap-2 px-3 py-2 bg-surface-bright border border-outline-variant rounded-lg text-sm hover:bg-surface-container transition-colors">
+          <span className="material-symbols-outlined text-sm">tune</span>
+          Seuil: {threshold.toLocaleString('fr-SN')} FCFA
+        </button>
       </div>
 
       <div className="flex gap-4 border-b border-outline-variant">
@@ -174,6 +197,14 @@ export default function MembersManagement() {
 
       {activeTab === "membres" && (
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+            <div className="grid grid-cols-3 gap-4 flex-1">
+            </div>
+            <button onClick={() => { setEditingId(null); setShowEditModal(false); const pwd = Math.random().toString(36).slice(-8); setShowCreateModal(true); setTempPwd(pwd); }}
+              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-all shrink-0">
+              <span className="material-symbols-outlined text-sm">person_add</span> Créer un membre
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-4 p-4 bg-surface-container-low border-b border-outline-variant">
             <div className="bg-surface-container-lowest rounded-lg p-3 border border-outline-variant">
               <p className="text-[12px] font-label-caps text-on-surface-variant">Total Membres</p>
@@ -345,6 +376,128 @@ export default function MembersManagement() {
             <form onSubmit={handleSaveCategory} className="space-y-4">
               <div><label className="font-label-caps text-label-caps uppercase">Nom</label><input type="text" className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowCategoryModal(false)} className="px-4 py-2 border border-outline-variant rounded text-sm">Fermer</button><button type="submit" className="px-4 py-2 bg-primary text-on-primary rounded text-sm font-semibold">Ok</button></div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest p-6 rounded-xl w-full max-w-md shadow-2xl border border-outline-variant max-h-[90vh] overflow-y-auto">
+            <h3 className="font-h3 text-h3 text-primary mb-4">Créer un nouveau membre</h3>
+            {createdResult ? (
+              <div className="space-y-4">
+                <div className="bg-tertiary-fixed/30 p-4 rounded-lg border border-tertiary-fixed">
+                  <p className="font-semibold text-on-tertiary-fixed-variant mb-2">Compte créé avec succès !</p>
+                  <p className="text-sm text-on-surface-variant">Identifiants temporaires :</p>
+                  <div className="bg-surface-bright p-3 rounded mt-2 font-mono text-sm">
+                    <p>Carte: <strong>{createCard}</strong></p>
+                    <p>Mot de passe: <strong>{tempPwd}</strong></p>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-2">Le membre peut se connecter avec son numéro de carte et ce mot de passe.</p>
+                </div>
+                <button onClick={() => { setShowCreateModal(false); setCreatedResult(null); setCreateCard(""); setCreateFirstName(""); setCreateLastName(""); setCreateFiliere(""); setCreateNiveau(""); setCreateRole("Membre"); }}
+                  className="w-full px-4 py-2 bg-primary text-on-primary rounded text-sm font-semibold">Fermer</button>
+              </div>
+            ) : (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!createCard || !createFirstName || !createLastName) { alert("Veuillez remplir les champs obligatoires."); return; }
+                setActionLoading(true);
+                try {
+                  const email = `${createCard.toLowerCase()}@etudiant.ucab.sn`;
+                  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+                    email, password: tempPwd, email_confirm: true,
+                  });
+                  if (authError) throw new Error(authError.message);
+                  const { error: profError } = await supabase.from('profiles').upsert({
+                    id: authData.user.id, card_number: createCard, first_name: createFirstName,
+                    last_name: createLastName, filiere: createFiliere, niveau: createNiveau,
+                    role: createRole, is_active: true,
+                  });
+                  if (profError) throw new Error(profError.message);
+                  await logAction(profile?.id, "creation_membre", { card_number: createCard, role: createRole });
+                  setCreatedResult(tempPwd);
+                  fetchData();
+                } catch (err: any) { alert("Erreur: " + err.message); }
+                finally { setActionLoading(false); }
+              }} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Numéro carte *</label>
+                    <input type="text" required value={createCard} onChange={(e) => setCreateCard(e.target.value)}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none" placeholder="Ex: 20260001" />
+                  </div>
+                  <div>
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Prénom *</label>
+                    <input type="text" required value={createFirstName} onChange={(e) => setCreateFirstName(e.target.value)}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Nom *</label>
+                    <input type="text" required value={createLastName} onChange={(e) => setCreateLastName(e.target.value)}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Filière</label>
+                    <select value={createFiliere} onChange={(e) => { setCreateFiliere(e.target.value); setCreateNiveau(""); }}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none">
+                      <option value="">-</option>
+                      {filieres.map((f) => <option key={f.id} value={f.name}>{f.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Niveau</label>
+                    <select value={createNiveau} onChange={(e) => setCreateNiveau(e.target.value)}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none">
+                      <option value="">-</option>
+                      {filieres.find(f => f.name === createFiliere)?.niveaux?.map((l: string) => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-label-caps text-label-caps uppercase text-on-surface-variant">Rôle</label>
+                    <select value={createRole} onChange={(e) => setCreateRole(e.target.value)}
+                      className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none">
+                      <option>Membre</option><option>Trésorier</option><option>Président</option><option>Presidente</option><option>Commissaire</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="bg-surface-container-low p-3 rounded text-sm">
+                  <p className="font-semibold text-on-surface">Mot de passe temporaire généré :</p>
+                  <p className="font-mono text-lg font-bold text-primary">{tempPwd}</p>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 border border-outline-variant rounded text-sm">Annuler</button>
+                  <button type="submit" disabled={actionLoading} className="px-4 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:bg-primary-container hover:text-on-primary-container transition-all">{actionLoading ? "..." : "Créer le compte"}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showThresholdModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest p-6 rounded-xl w-full max-w-sm shadow-2xl border border-outline-variant">
+            <h3 className="font-h3 text-h3 text-primary mb-4">Modifier le seuil de dépense</h3>
+            <p className="text-body-sm text-on-surface-variant mb-4">Les demandes de dépense supérieures à ce montant nécessitent une validation du Président.</p>
+            <form onSubmit={async (e) => {
+              e.preventDefault(); setActionLoading(true);
+              const val = parseInt(thresholdInput);
+              if (isNaN(val) || val < 0) { alert("Montant invalide."); setActionLoading(false); return; }
+              await supabase.from('app_config').upsert({ key: 'significant_expense_threshold', value: val.toString() });
+              setThreshold(val); setShowThresholdModal(false);
+              await logAction(profile?.id, "modification_seuil", { new_threshold: val });
+              setActionLoading(false);
+            }} className="space-y-4">
+              <div>
+                <label className="font-label-caps text-label-caps uppercase">Montant (FCFA)</label>
+                <input type="number" className="w-full bg-surface-bright border border-outline-variant rounded text-sm px-3 py-2 focus:ring-2 focus:ring-primary outline-none" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)} min="0" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowThresholdModal(false)} className="px-4 py-2 border border-outline-variant rounded text-sm">Annuler</button>
+                <button type="submit" disabled={actionLoading} className="px-4 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:bg-primary-container hover:text-on-primary-container transition-all">{actionLoading ? "..." : "Enregistrer"}</button>
+              </div>
             </form>
           </div>
         </div>

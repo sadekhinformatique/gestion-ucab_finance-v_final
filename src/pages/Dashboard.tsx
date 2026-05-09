@@ -33,7 +33,7 @@ export default function Dashboard() {
         let totalS = 0, totalD = 0;
         txs.forEach((t) => {
           const status = t.statut || t.status;
-          const isApproved = status === "approved" || status === "validated_president";
+          const isApproved = status === "approved" || status === "validated_president" || status === "converted";
           if (isApproved) {
             const amt = Number(t.montant || t.amount || 0);
             if (t.type === "entree" || t.type === "recette") totalS += amt;
@@ -84,7 +84,7 @@ export default function Dashboard() {
   const isFinancialAdmin = profile?.role?.toLowerCase() === "admin" || profile?.role?.toLowerCase() === "trésorier" || profile?.role?.toLowerCase() === "président" || profile?.role?.toLowerCase() === "presidente";
 
   const statusBadge = (status: string) => {
-    if (status === "approved" || status === "validated_president")
+    if (status === "approved" || status === "validated_president" || status === "converted")
       return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-semibold bg-tertiary-fixed/40 text-on-tertiary-fixed-variant">Validé</span>;
     if (status === "rejected")
       return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-semibold bg-error-container text-on-error-container">Refusé</span>;
@@ -170,17 +170,30 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="h-64 w-full flex items-end gap-4 px-4 pb-4 border-b border-l border-outline-variant">
-            {["JAN", "FEV", "MAR", "AVR", "MAI", "JUN"].map((m, i) => {
-              const revH = 40 + Math.random() * 50;
-              const depH = 20 + Math.random() * 40;
+            {(() => {
+            const monthLabels = ["JAN", "FEV", "MAR", "AVR", "MAI", "JUN"];
+            const monthlyData = monthLabels.map((_, i) => {
+              const monthTransactions = transactions.filter(t => {
+                const d = new Date(t.date || Date.now());
+                return d.getMonth() === i;
+              });
+              const rev = monthTransactions.filter(t => t.income).reduce((s, t) => s + t.amount, 0);
+              const dep = monthTransactions.filter(t => !t.income).reduce((s, t) => s + t.amount, 0);
+              return { rev, dep };
+            });
+            const maxVal = Math.max(...monthlyData.flatMap(d => [d.rev, d.dep]), 1);
+            return monthLabels.map((m, i) => {
+              const revH = (monthlyData[i].rev / maxVal) * 90;
+              const depH = (monthlyData[i].dep / maxVal) * 90;
               return (
                 <div key={m} className="flex-1 flex flex-col justify-end gap-1 group relative">
-                  <div className="bg-primary w-full rounded-t transition-all" style={{ height: `${revH}%` }} />
-                  <div className="bg-secondary-container w-full rounded-t transition-all" style={{ height: `${depH}%` }} />
+                  <div className="bg-primary w-full rounded-t transition-all" style={{ height: `${Math.max(revH, 2)}%` }} />
+                  <div className="bg-secondary-container w-full rounded-t transition-all" style={{ height: `${Math.max(depH, 2)}%` }} />
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-label-caps text-on-surface-variant">{m}</span>
                 </div>
               );
-            })}
+            });
+          })()}
           </div>
           <div className="flex gap-stack-lg mt-12 justify-center">
             <div className="flex items-center gap-2">

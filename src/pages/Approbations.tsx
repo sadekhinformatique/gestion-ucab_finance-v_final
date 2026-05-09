@@ -75,8 +75,8 @@ export default function Approbations() {
       if (req.status === 'pending') {
         // Trésorier approuve
         if (req.amount < threshold) {
-          // Validation finale
-          newStatus = 'approved'; // ou validated_president selon la logique, 'approved' est direct
+          // Validation finale directe
+          newStatus = 'converted';
         } else {
           newStatus = 'treasurer_approved'; // Part au président
         }
@@ -89,7 +89,7 @@ export default function Approbations() {
         
       } else if (req.status === 'treasurer_approved') {
         // Président valide
-        newStatus = 'validated_president';
+        newStatus = 'converted';
         await supabase.from('expense_requests').update({
           status: newStatus,
           president_validated_by: profile?.id,
@@ -100,13 +100,13 @@ export default function Approbations() {
       await logAction(profile?.id, "approbation_demande", { request_id: req.id, newStatus });
 
       // Si validation finale, créer la transaction
-      if (newStatus === 'approved' || newStatus === 'validated_president') {
+      if (newStatus === 'converted') {
         await supabase.from('transactions').insert([{
           type: 'sortie',
           categorie: req.category?.name || 'Autre',
           montant: req.amount,
           description: req.description + (req.member ? ` (Demandé par ${req.member.first_name} ${req.member.last_name})` : ''),
-          statut: newStatus,
+          statut: 'converted',
           created_by: req.member_id,
           approved_by: profile?.id, // simplifié, on met l'ID de la dernière personne qui valide
           fichier_url: req.justification_url,
@@ -221,12 +221,12 @@ export default function Approbations() {
                   ${req.status === 'pending' ? 'bg-orange-100 text-orange-700' : ''}
                   ${req.status === 'treasurer_approved' ? 'bg-blue-100 text-blue-700' : ''}
                   ${req.status === 'rejected' ? 'bg-red-100 text-red-700' : ''}
-                  ${(req.status === 'approved' || req.status === 'validated_president') ? 'bg-emerald-100 text-emerald-700' : ''}
+                  ${req.status === 'converted' ? 'bg-emerald-100 text-emerald-700' : ''}
                 `}>
                   {req.status === 'pending' && 'En attente (Trésorier)'}
                   {req.status === 'treasurer_approved' && 'En attente (Président)'}
                   {req.status === 'rejected' && 'Rejetée'}
-                  {(req.status === 'approved' || req.status === 'validated_president') && 'Validée'}
+                  {req.status === 'converted' && 'Validée'}
                 </span>
               </div>
               
@@ -259,7 +259,7 @@ export default function Approbations() {
                 )}
 
                 {/* Actions */}
-                {((req.status === 'pending' && (isTresorier || isAdmin)) || (req.status === 'treasurer_approved' && (isPresident || isAdmin))) && (
+                {((req.status === 'pending' && (isTresorier || isAdmin)) || (req.status === 'treasurer_approved' && (isPresident || isAdmin))) && req.status !== 'converted' && (
                   <div className="mt-auto pt-4 flex gap-3">
                     <button
                       onClick={() => handleApprove(req)}

@@ -37,7 +37,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const visibleItems = navItems.filter((item) => {
     if (!item.adminOnly && !item.adminOrBureau && !item.adminOrTresorier && !item.adminOrCommissaire) return true;
-    if (item.adminOnly && ["admin", "trésorier", "présidente", "président", "commissaire"].includes(role)) return true;
+    if (item.adminOnly && role === "admin") return true;
     if (item.adminOrBureau && ["admin", "trésorier", "présidente", "président"].includes(role)) return true;
     if (item.adminOrTresorier && ["admin", "trésorier"].includes(role)) return true;
     if (item.adminOrCommissaire && ["admin", "commissaire"].includes(role)) return true;

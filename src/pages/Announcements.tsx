@@ -20,6 +20,8 @@ export default function Announcements() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("Tout");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 4;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -59,8 +61,11 @@ export default function Announcements() {
     fetchAnnouncements();
   };
 
-  const pinnedItems = announcements.filter((a) => a.pinned);
-  const regularItems = announcements.filter((a) => !a.pinned);
+  const filteredByCategory = announcements.filter((a) => filter === "Tout" || a.title.includes(filter) || a.content.includes(filter));
+  const pinnedItems = filteredByCategory.filter((a) => a.pinned);
+  const regularItems = filteredByCategory.filter((a) => !a.pinned);
+  const totalPages = Math.ceil(regularItems.length / itemsPerPage) || 1;
+  const paginatedRegular = regularItems.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
     <div className="space-y-gutter">
@@ -120,7 +125,7 @@ export default function Announcements() {
           {["Tout", "Finances", "Événements", "Institutions"].map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => { setFilter(f); setPage(1); }}
               className={`font-label-caps py-1 cursor-pointer transition-colors ${filter === f ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary"}`}
             >
               {f}
@@ -181,7 +186,7 @@ export default function Announcements() {
               </article>
             )}
 
-            {regularItems.slice(0, 4).map((a) => (
+            {paginatedRegular.map((a) => (
               <article key={a.id} className="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
                 <div className="h-48 overflow-hidden bg-surface-container">
                   {a.image_url ? (
@@ -212,14 +217,17 @@ export default function Announcements() {
             ))}
           </div>
 
-          {regularItems.length > 4 && (
+          {totalPages > 1 && (
             <div className="mt-stack-lg flex justify-center items-center gap-stack-sm">
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-40">
                 <span className="material-symbols-outlined">chevron_left</span>
               </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold">1</button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">2</button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button key={i + 1} onClick={() => setPage(i + 1)} className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold transition-colors ${page === i + 1 ? 'bg-primary text-on-primary' : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container'}`}>
+                  {i + 1}
+                </button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-40">
                 <span className="material-symbols-outlined">chevron_right</span>
               </button>
             </div>

@@ -74,12 +74,12 @@ export default function MyRequests() {
                       <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider
                         ${req.status === 'pending' || req.status === 'treasurer_approved' ? 'bg-orange-100 text-orange-700' : ''}
                         ${req.status === 'rejected' ? 'bg-red-100 text-red-700' : ''}
-                        ${(req.status === 'approved' || req.status === 'validated_president') ? 'bg-emerald-100 text-emerald-700' : ''}
+                        ${(req.status === 'converted') ? 'bg-emerald-100 text-emerald-700' : ''}
                       `}>
                         {req.status === 'pending' && 'En cours...'}
-                        {req.status === 'treasurer_approved' && 'Refus / En cours...'} {/* Si c'est treasurer_approved, l'utilisateur le voit comme en cours */}
+                        {req.status === 'treasurer_approved' && 'En attente (Président)'}
                         {req.status === 'rejected' && 'Rejetée'}
-                        {(req.status === 'approved' || req.status === 'validated_president') && 'Validée'}
+                        {req.status === 'converted' && 'Validée'}
                       </span>
                    </div>
                    {req.justification_url && (
