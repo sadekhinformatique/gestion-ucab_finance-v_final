@@ -5,17 +5,19 @@ import { supabase } from "../lib/supabase";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'form' | 'success'>('form');
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const [error, setError] = useState("");
   const [filieres, setFilieres] = useState<any[]>([]);
 
+  const [cardNumber, setCardNumber] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [filiere, setFiliere] = useState("");
   const [niveau, setNiveau] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
@@ -35,8 +37,13 @@ export default function Register() {
       setError("La photo ne doit pas dépasser 2 Mo");
       return;
     }
+    if (!file.type.startsWith("image/")) {
+      setError("Le fichier doit être une image");
+      return;
+    }
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +51,26 @@ export default function Register() {
     setLoading(true);
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      setLoading(false);
+      return;
+    }
+
     try {
+      const cardTrimmed = cardNumber.trim();
+
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("card_number")
+        .eq("card_number", cardTrimmed)
+        .maybeSingle();
+      if (existing) {
+        throw new Error("Ce numéro de carte est déjà utilisé");
+      }
+
+      const email = `${cardTrimmed.toLowerCase()}@etudiant.ucab.sn`;
+
       const { data: authData, error: authErr } = await supabase.auth.signUp({
         email,
         password,
@@ -55,13 +81,13 @@ export default function Register() {
       let photo_url: string | null = null;
       if (photoFile) {
         const ext = photoFile.name.split('.').pop();
-        const filePath = `${authData.user.id}/avatar.${ext}`;
+        const filePath = `${authData.user.id}/profile.${ext}`;
         const { error: uploadErr } = await supabase.storage
-          .from('avatars')
+          .from('profile_photos')
           .upload(filePath, photoFile, { upsert: true });
         if (!uploadErr) {
           const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
+            .from('profile_photos')
             .getPublicUrl(filePath);
           photo_url = publicUrl;
         }
@@ -69,17 +95,19 @@ export default function Register() {
 
       const { error: insErr } = await supabase.from("profiles").upsert({
         id: authData.user.id,
+        card_number: cardTrimmed,
         first_name: firstName,
         last_name: lastName,
+        birth_date: birthDate || null,
         filiere,
         niveau,
         photo_url,
         role: "Membre",
-        is_active: false,
+        is_active: true,
       });
       if (insErr) throw insErr;
 
-      setStep('success');
+      setRegistered(true);
     } catch (err: any) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {
@@ -87,25 +115,25 @@ export default function Register() {
     }
   };
 
-  if (step === 'success') {
+  if (registered) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4">
         <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800">Inscription envoyée !</h2>
+          <h2 className="text-2xl font-black text-slate-800">Inscription réussie !</h2>
           <p className="mt-3 text-slate-500">
-            Votre demande d'inscription a été soumise. Un administrateur va vérifier vos informations et activer votre compte.
+            Votre compte a été créé. Vous pouvez dès maintenant vous connecter avec votre numéro de carte et votre mot de passe.
           </p>
-          <p className="mt-2 text-sm text-slate-400">
-            Vous recevrez une notification dès que votre compte sera actif.
+          <p className="mt-1 text-sm text-slate-400">
+            Email de connexion : <span className="font-mono font-bold">{cardNumber.toLowerCase()}@etudiant.ucab.sn</span>
           </p>
           <div className="mt-8 space-y-3">
             <Link to="/" className="block w-full py-3 px-4 bg-[#1e2a5e] text-white font-bold rounded-lg hover:opacity-90">
               Aller à la connexion
             </Link>
-            <Link to="/actualites" className="block w-full py-3 px-4 border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50">
+            <Link to="/actualites-publiques" className="block w-full py-3 px-4 border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50">
               Voir les actualités
             </Link>
           </div>
@@ -124,7 +152,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#1e2a5e] shadow-lg mb-4">
             <span className="text-white font-black text-2xl tracking-tighter">SAS</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-800">Inscription Membre</h2>
+          <h2 className="text-2xl font-black text-slate-800">Inscription Étudiant</h2>
           <p className="mt-1 text-sm text-slate-500">Amicale UCAB Dakar</p>
         </div>
 
@@ -150,48 +178,64 @@ export default function Register() {
               </label>
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                Numéro carte étudiant <span className="text-red-500">*</span>
+              </label>
+              <input type="text" required value={cardNumber} onChange={e => setCardNumber(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]"
+                placeholder="EX: 20260001" />
+              <p className="text-[11px] text-slate-400 mt-1">Email de connexion généré : <span className="font-mono">{cardNumber || "..."}@etudiant.ucab.sn</span></p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nom</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nom <span className="text-red-500">*</span></label>
                 <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)}
                   className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Prénom(s)</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Prénom(s) <span className="text-red-500">*</span></label>
                 <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)}
                   className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]"
-                placeholder="exemple@ucab.edu.sn" />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Mot de passe</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6}
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Date de naissance</label>
+              <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)}
                 className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Filière</label>
-                <select value={filiere} onChange={e => { setFiliere(e.target.value); setNiveau(""); }}
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Filière <span className="text-red-500">*</span></label>
+                <select value={filiere} onChange={e => { setFiliere(e.target.value); setNiveau(""); }} required
                   className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]">
                   <option value="">Sélectionner...</option>
                   {filieres.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Niveau</label>
-                <select value={niveau} onChange={e => setNiveau(e.target.value)} required={!!filiere}
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Niveau <span className="text-red-500">*</span></label>
+                <select value={niveau} onChange={e => setNiveau(e.target.value)} required
                   className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]">
                   <option value="">Sélectionner...</option>
                   {niveaux.map((lvl: string) => <option key={lvl} value={lvl}>{lvl}</option>)}
                 </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Mot de passe <span className="text-red-500">*</span></label>
+                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6}
+                  className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Confirmer <span className="text-red-500">*</span></label>
+                <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={6}
+                  className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2.5 focus:ring-2 focus:ring-[#1e2a5e]" />
               </div>
             </div>
 

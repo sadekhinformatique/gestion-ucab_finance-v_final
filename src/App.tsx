@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Announcements from "./pages/Announcements";
+import PublicAnnouncements from "./pages/PublicAnnouncements";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import NewRequest from "./pages/NewRequest";
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/" element={<Login />} />
           <Route path="/inscription" element={<Register />} />
           <Route path="/actualites" element={<Announcements />} />
+          <Route path="/actualites-publiques" element={<PublicAnnouncements />} />
           
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />

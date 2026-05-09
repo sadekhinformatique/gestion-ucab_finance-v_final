@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { UserPlus, Search, Shield, XCircle, CheckCircle, Edit, BookOpen, Tags, Key, Clock, UserCheck, UserX } from "lucide-react";
+import { Shield, XCircle, CheckCircle, Edit, BookOpen, Tags, Key, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
 import { logAction } from "../lib/audit";
 
-type TabType = 'membres' | 'inscriptions' | 'filieres' | 'categories';
+type TabType = 'membres' | 'filieres' | 'categories';
 
 export default function MembersManagement() {
   const { profile } = useAuth();
@@ -19,29 +19,18 @@ export default function MembersManagement() {
   const [filieres, setFilieres] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
-  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showFiliereModal, setShowFiliereModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [mCard, setMCard] = useState('');
-  const [mFirstName, setMFirstName] = useState('');
-  const [mLastName, setMLastName] = useState('');
-  const [mFiliere, setMFiliere] = useState('');
-  const [mNiveau, setMNiveau] = useState('');
-  const [mRole, setMRole] = useState('Membre');
-  const [mBirthDate, setMBirthDate] = useState('');
+  const [editRole, setEditRole] = useState('Membre');
+  const [editFiliere, setEditFiliere] = useState('');
+  const [editNiveau, setEditNiveau] = useState('');
 
   const [fName, setFName] = useState('');
   const [fLevels, setFLevels] = useState('L1, L2, L3');
   const [cName, setCName] = useState('');
-  const [generatedPwd, setGeneratedPwd] = useState<string | null>(null);
-
-  const [pendingMembers, setPendingMembers] = useState<any[]>([]);
-  const [approveCard, setApproveCard] = useState('');
-  const [approveRole, setApproveRole] = useState('Membre');
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAdmin) {
@@ -72,37 +61,36 @@ export default function MembersManagement() {
     }
   };
 
-  const fetchPending = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('profiles').select('*').eq('is_active', false).is('card_number', null).order('created_at', { ascending: false });
-    if (data) setPendingMembers(data);
-    setLoading(false);
+  const openEdit = (m: any) => {
+    setEditingId(m.id);
+    setEditRole(m.role || 'Membre');
+    setEditFiliere(m.filiere || '');
+    setEditNiveau(m.niveau || '');
+    setShowEditModal(true);
   };
 
-  const approveMember = async (id: string) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
     setActionLoading(true);
     try {
       const { error: updErr } = await supabase.from('profiles').update({
-        is_active: true,
-        card_number: approveCard || null,
-        role: approveRole,
-      }).eq('id', id);
+        role: editRole,
+        filiere: editFiliere,
+        niveau: editNiveau,
+      }).eq('id', editingId);
       if (updErr) throw updErr;
 
       await supabase.from('notifications').insert([{
-        user_id: id,
-        title: 'Compte approuvé',
-        content: `Votre inscription a été approuvée. Vous avez le rôle: ${approveRole}. Connectez-vous avec votre email.`,
-        message: `Compte approuvé ! Rôle: ${approveRole}.`,
-        type: 'approbation_compte',
+        user_id: editingId,
+        title: 'Profil mis à jour',
+        content: `Votre rôle a été mis à jour par l'administration. Nouveau rôle: ${editRole}.`,
+        type: 'profil_maj',
         link: '/profil'
       }]);
 
-      await logAction(profile?.id, 'approbation_membre', { member_id: id, card_number: approveCard, role: approveRole });
-      setShowApproveModal(false);
-      setApproveCard('');
-      setApproveRole('Membre');
-      fetchPending();
+      await logAction(profile?.id, 'modification_membre', { member_id: editingId, role: editRole });
+      setShowEditModal(false);
       fetchData();
     } catch (err: any) {
       alert(err.message);
@@ -111,130 +99,50 @@ export default function MembersManagement() {
     }
   };
 
-  const rejectMember = async (id: string) => {
-    if (!confirm('Désactiver cette inscription ? Le membre pourra être réactivé plus tard.')) return;
+  const toggleStatus = async (id: string, current: boolean) => {
     try {
-      await supabase.from('profiles').update({ is_active: false }).eq('id', id);
+      await supabase.from('profiles').update({ is_active: !current }).eq('id', id);
+      await logAction(profile?.id, "modification_statut_membre", { member_id: id, new_status: !current });
       await supabase.from('notifications').insert([{
         user_id: id,
-        title: 'Inscription refusée',
-        content: 'Votre demande d\'inscription a été refusée par l\'administration.',
-        message: 'Inscription refusée.',
-        type: 'refus_compte'
+        title: 'Statut du compte',
+        content: `Votre statut a été modifié. Vous êtes maintenant ${!current ? 'actif' : 'inactif'}.`,
+        type: 'statut_maj'
       }]);
-      await logAction(profile?.id, 'refus_membre', { member_id: id });
-      fetchPending();
-    } catch (err: any) {
-      alert("Erreur: " + err.message);
-    }
-  };
-
-  const handleSaveMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setActionLoading(true);
-    setError(null);
-    setGeneratedPwd(null);
-
-    const dataObj = {
-      card_number: mCard,
-      first_name: mFirstName,
-      last_name: mLastName,
-      filiere: mFiliere,
-      niveau: mNiveau,
-      role: mRole,
-      birth_date: mBirthDate || null,
-      is_active: true
-    };
-
-    try {
-      if (editingId) {
-        const { error: updErr } = await supabase.from('profiles').update(dataObj).eq('id', editingId);
-        if (updErr) throw updErr;
-
-        await supabase.from('notifications').insert([{
-           user_id: editingId,
-           title: 'Profil Mis à Jour',
-           content: `Votre profil a été mis à jour par l'administration. Rôle actuel: ${mRole}.`,
-           message: `Votre profil a été mis à jour. Rôle: ${mRole}.`,
-           type: 'profil_maj',
-           link: '/dashboard'
-        }]);
-      } else {
-        const { data: { session: adminSession } } = await supabase.auth.getSession();
-        
-        const email = `${mCard.toLowerCase()}@temp.ucab`;
-        const initialPassword = `${mFirstName.toLowerCase().replace(/\s/g, '')}${new Date().getFullYear()}`;
-        
-        const { data: authData, error: authErr } = await supabase.auth.signUp({
-          email,
-          password: initialPassword,
-        });
-
-        if (authErr) throw authErr;
-
-        if (authData.user) {
-          const { error: insErr } = await supabase.from('profiles').upsert({
-            id: authData.user.id,
-            ...dataObj
-          });
-          if (insErr) throw insErr;
-          
-          await supabase.from('notifications').insert([{
-             user_id: authData.user.id,
-             title: 'Bienvenue',
-             content: `Bienvenue sur la plateforme SAS Amicale UCAB Dakar. Vous êtes inscrit avec le rôle: ${mRole}.`,
-             message: `Bienvenue! Vous êtes inscrit avec le rôle: ${mRole}.`,
-             type: 'nouveau_membre',
-             link: '/dashboard'
-          }]);
-        }
-        setGeneratedPwd(`Email (Login) : ${email} | MDP : ${initialPassword}`);
-
-        if (adminSession) {
-          await supabase.auth.setSession({
-            access_token: adminSession.access_token,
-            refresh_token: adminSession.refresh_token
-          });
-        }
-        
-        await logAction(profile?.id, "creation_membre", { card_number: mCard, email });
-      }
-      await fetchData();
-      if (editingId) {
-        await logAction(profile?.id, "modification_membre", { member_id: editingId, ...dataObj });
-        setShowMemberModal(false);
-      }
-    } catch (err: any) {
-      setError(err.message || "Erreur de sauvegarde.");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const toggleMemberStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      await supabase.from('profiles').update({ is_active: !currentStatus }).eq('id', id);
-      await logAction(profile?.id, "modification_statut_membre", { member_id: id, new_status: !currentStatus });
-      
-      await supabase.from('notifications').insert([{
-         user_id: id,
-         title: 'Statut du compte',
-         content: `Votre statut a été modifié. Vous êtes maintenant ${!currentStatus ? 'actif' : 'inactif'}.`,
-         message: `Votre statut a été modifié en ${!currentStatus ? 'Actif' : 'Inactif'}.`,
-         type: 'statut_maj'
-      }]);
-
       fetchData();
     } catch (err: any) {
       alert("Erreur de modification du statut.");
     }
   };
 
-  const openEditMember = (m: any) => {
-    setEditingId(m.id); setMCard(m.card_number || ''); setMFirstName(m.first_name || '');
-    setMLastName(m.last_name || ''); setMFiliere(m.filiere || ''); setMNiveau(m.niveau || '');
-    setMRole(m.role || 'Membre'); setMBirthDate(m.birth_date || '');
-    setShowMemberModal(true); setGeneratedPwd(null);
+  const handleResetPassword = async (email: string) => {
+    if (!confirm(`Envoyer un lien de réinitialisation à ${email} ?`)) return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      alert("Lien de réinitialisation envoyé !");
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    }
+  };
+
+  const handleDeleteMember = async (id: string, name: string) => {
+    if (!confirm(`Supprimer définitivement le compte de ${name} ? Cette action est irréversible.`)) return;
+    if (!confirm(`Confirmer la suppression de ${name} ?`)) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.rpc('delete_user', { user_id: id });
+      if (error) {
+        await supabase.from('profiles').update({ is_active: false, card_number: `DELETED-${id.substring(0, 8)}` }).eq('id', id);
+        alert("Compte désactivé (suppression via RPC non disponible)");
+      }
+      await logAction(profile?.id, 'suppression_membre', { member_id: id });
+      fetchData();
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleSaveFiliere = async (e: React.FormEvent) => {
@@ -258,7 +166,7 @@ export default function MembersManagement() {
       if (editingId) {
         await supabase.from('expense_categories').update({ name: cName }).eq('id', editingId);
       } else {
-         await supabase.from('expense_categories').insert({ name: cName });
+        await supabase.from('expense_categories').insert({ name: cName });
       }
       fetchData(); setShowCategoryModal(false);
     } catch (err) { alert("Erreur."); } finally { setActionLoading(false); }
@@ -266,7 +174,7 @@ export default function MembersManagement() {
 
   if (!isAdmin) return <div className="p-8 text-center text-slate-500 font-medium">{error || "Chargement..."}</div>;
 
-  const selectedFiliereObj = filieres.find(f => f.name === mFiliere);
+  const selectedFiliereObj = filieres.find(f => f.name === editFiliere);
   const availableNiveaux = selectedFiliereObj?.niveaux || ['L1', 'L2', 'L3'];
 
   return (
@@ -277,16 +185,15 @@ export default function MembersManagement() {
 
       <div className="flex flex-wrap space-x-2 border-b border-slate-200">
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'membres' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('membres')}><Shield className="w-4 h-4" /><span>Membres</span></button>
-        <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'inscriptions' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => { setActiveTab('inscriptions'); setLoading(true); fetchPending(); }}><Clock className="w-4 h-4" /><span>En attente</span></button>
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'filieres' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('filieres')}><BookOpen className="w-4 h-4" /><span>Filières</span></button>
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'categories' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('categories')}><Tags className="w-4 h-4" /><span>Catégories</span></button>
       </div>
 
       {activeTab === 'membres' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="p-5 border-b border-slate-100 bg-slate-50/50">
             <h3 className="font-bold text-slate-700">Liste des membres</h3>
-            <button onClick={() => { setEditingId(null); setMCard(''); setMFirstName(''); setMLastName(''); setMBirthDate(''); setMFiliere(filieres[0]?.name || ''); setMNiveau(''); setMRole('Membre'); setShowMemberModal(true); setGeneratedPwd(null); }} className="inline-flex items-center px-4 py-2 bg-[#1e2a5e] text-white text-xs font-bold rounded-lg hover:opacity-90"><UserPlus className="w-4 h-4 mr-2" /> Nouveau</button>
+            <p className="text-xs text-slate-500 mt-1">Les membres s'inscrivent eux-mêmes via le formulaire public.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -301,11 +208,13 @@ export default function MembersManagement() {
                     <td className="px-6 py-4 text-center"><span className="px-2 py-1 bg-slate-100 text-[10px] font-bold rounded">{m.role}</span></td>
                     <td className="px-6 py-4 text-center"><span className={`px-2 py-1 text-[10px] font-bold rounded-full ${m.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{m.is_active ? 'Actif' : 'Désactivé'}</span></td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button onClick={() => openEditMember(m)} className="p-1 hover:text-[#1e2a5e]"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => toggleMemberStatus(m.id, m.is_active)} className="p-1 hover:text-[#1e2a5e]">
+                      <div className="flex justify-end space-x-1">
+                        <button onClick={() => openEdit(m)} className="p-1.5 hover:text-[#1e2a5e] hover:bg-slate-100 rounded" title="Modifier"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => toggleStatus(m.id, m.is_active)} className="p-1.5 hover:text-[#1e2a5e] hover:bg-slate-100 rounded" title={m.is_active ? 'Désactiver' : 'Activer'}>
                           {m.is_active ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle className="w-4 h-4 text-emerald-500" />}
                         </button>
+                        <button onClick={() => handleResetPassword(`${m.card_number?.toLowerCase() || m.id}@etudiant.ucab.sn`)} className="p-1.5 hover:text-[#1e2a5e] hover:bg-slate-100 rounded" title="Réinitialiser mot de passe"><Key className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeleteMember(m.id, `${m.first_name} ${m.last_name}`)} className="p-1.5 hover:text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -316,121 +225,66 @@ export default function MembersManagement() {
         </div>
       )}
 
-      {activeTab === 'inscriptions' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="font-bold text-slate-700">Inscriptions en attente d'approbation</h3>
-            <p className="text-xs text-slate-500 mt-1">Ces étudiants se sont inscrits via le formulaire public et attendent votre validation.</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead><tr className="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-50"><th className="px-6 py-4">Membre</th><th className="px-6 py-4">Scolarité</th><th className="px-6 py-4">Photo</th><th className="px-6 py-4">Inscrit le</th><th className="px-6 py-4 text-right">Actions</th></tr></thead>
-              <tbody className="text-sm text-slate-600">
-                {loading && <tr><td colSpan={5} className="text-center py-8">Chargement...</td></tr>}
-                {!loading && pendingMembers.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-400">Aucune inscription en attente</td></tr>}
-                {!loading && pendingMembers.map((m) => (
-                  <tr key={m.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs uppercase border border-amber-200">
-                          {m.first_name?.charAt(0) || m.last_name?.charAt(0) || '?'}
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-800">{m.last_name} {m.first_name}</div>
-                          <div className="text-[11px] text-slate-400">{m.email ? m.email.split('@')[0] : ''}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4"><div className="text-xs font-semibold">{m.filiere}</div><div className="text-[11px] text-slate-400">{m.niveau}</div></td>
-                    <td className="px-6 py-4">{m.photo_url ? <img src={m.photo_url} alt="" className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-slate-100" />}</td>
-                    <td className="px-6 py-4 text-xs text-slate-500">{new Date(m.created_at).toLocaleDateString('fr-FR')}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button onClick={() => { setApprovingId(m.id); setApproveCard(''); setApproveRole('Membre'); setShowApproveModal(true); }} className="inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-[11px] font-bold rounded hover:bg-emerald-700"><UserCheck className="w-3 h-3 mr-1" /> Approuver</button>
-                        <button onClick={() => rejectMember(m.id)} className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 text-[11px] font-bold rounded hover:bg-red-200"><UserX className="w-3 h-3 mr-1" /> Refuser</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {showApproveModal && (
+      {showEditModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center p-4">
           <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
-            <h3 className="font-bold mb-4">Approuver l'inscription</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold uppercase text-slate-600">Carte Étudiant (optionnel)</label>
-                <input type="text" value={approveCard} onChange={e => setApproveCard(e.target.value)}
-                  className="w-full border border-slate-200 rounded text-sm px-3 py-2" placeholder="EX: 20260001" />
-              </div>
+            <h3 className="font-bold mb-4">Modifier le membre</h3>
+            <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
                 <label className="text-xs font-bold uppercase text-slate-600">Rôle</label>
-                <select value={approveRole} onChange={e => setApproveRole(e.target.value)}
+                <select value={editRole} onChange={e => setEditRole(e.target.value)}
                   className="w-full border border-slate-200 rounded text-sm px-3 py-2">
-                  <option>Membre</option><option>Trésorier</option><option>Président</option><option>Presidente</option><option>Commissaire</option>
+                  <option>Membre</option><option>Trésorier</option><option>Président</option><option>Presidente</option><option>Commissaire</option><option>Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-slate-600">Filière</label>
+                <select value={editFiliere} onChange={e => { setEditFiliere(e.target.value); setEditNiveau(""); }}
+                  className="w-full border border-slate-200 rounded text-sm px-3 py-2">
+                  <option value="">-</option>
+                  {filieres.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-slate-600">Niveau</label>
+                <select value={editNiveau} onChange={e => setEditNiveau(e.target.value)}
+                  className="w-full border border-slate-200 rounded text-sm px-3 py-2">
+                  <option value="">-</option>
+                  {availableNiveaux.map((lvl: string) => <option key={lvl} value={lvl}>{lvl}</option>)}
                 </select>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowApproveModal(false)} className="px-4 py-2 border rounded text-sm">Annuler</button>
-                <button type="button" onClick={() => approvingId && approveMember(approvingId)} disabled={actionLoading}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded text-sm font-bold">{actionLoading ? '...' : 'Approuver'}</button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 border rounded text-sm">Annuler</button>
+                <button type="submit" disabled={actionLoading}
+                  className="px-4 py-2 bg-[#1e2a5e] text-white rounded text-sm font-bold">{actionLoading ? '...' : 'Enregistrer'}</button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {showMemberModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center p-4">
-           <div className="bg-white p-6 rounded-xl w-full max-w-xl shadow-2xl">
-              <h3 className="font-bold mb-4">{editingId ? 'Modifier un membre' : 'Nouveau membre'}</h3>
-              <form onSubmit={handleSaveMember} className="space-y-4">
-                 <div className="grid grid-cols-2 gap-4">
-                   <div><label className="text-xs font-bold uppercase">Carte</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={mCard} onChange={e=>setMCard(e.target.value)} disabled={!!editingId} required/></div>
-                    <div><label className="text-xs font-bold uppercase">Rôle</label><select className="w-full border-slate-200 rounded text-sm" value={mRole} onChange={e=>setMRole(e.target.value)}><option>Membre</option><option>Admin</option><option>Trésorier</option><option>Président</option><option>Presidente</option><option>Commissaire</option></select></div>
-                   <div><label className="text-xs font-bold uppercase">Nom</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={mLastName} onChange={e=>setMLastName(e.target.value)} required/></div>
-                   <div><label className="text-xs font-bold uppercase">Prénom(s)</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={mFirstName} onChange={e=>setMFirstName(e.target.value)} required/></div>
-                   <div><label className="text-xs font-bold uppercase">Filière</label><select className="w-full border-slate-200 rounded text-sm" value={mFiliere} onChange={e=>setMFiliere(e.target.value)}><option value="">-</option>{filieres.map(f=><option key={f.id} value={f.name}>{f.name}</option>)}</select></div>
-                   <div><label className="text-xs font-bold uppercase">Niveau</label><select className="w-full border-slate-200 rounded text-sm" value={mNiveau} onChange={e=>setMNiveau(e.target.value)}><option value="">-</option>{availableNiveaux.map((lvl: string)=><option key={lvl} value={lvl}>{lvl}</option>)}</select></div>
-                 </div>
-                 {generatedPwd && <div className="p-3 bg-emerald-50 text-emerald-800 font-mono text-xs rounded">{generatedPwd}</div>}
-                 <div className="flex justify-end space-x-2 pt-4">
-                    <button type="button" onClick={()=>setShowMemberModal(false)} className="px-4 py-2 border rounded text-sm">Annuler</button>
-                    {!generatedPwd && <button type="submit" disabled={actionLoading} className="px-4 py-2 bg-[#1e2a5e] text-white rounded text-sm font-bold">{actionLoading?'...':'Enregistrer'}</button>}
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-      
-      {/* Filiere Modal and Category Modal similar... */}
       {showFiliereModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-           <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
-             <h3 className="font-bold mb-4">{editingId?"Modifier Filière":"Nouvelle Filière"}</h3>
-             <form onSubmit={handleSaveFiliere} className="space-y-4">
-                <div><label className="text-xs font-bold uppercase">Nom</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={fName} onChange={e=>setFName(e.target.value)}/></div>
-                <div><label className="text-xs font-bold uppercase">Niveaux</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={fLevels} onChange={e=>setFLevels(e.target.value)} placeholder="L1, L2..."/></div>
-                <div className="flex justify-end space-x-2"><button type="button" onClick={()=>setShowFiliereModal(false)} className="px-4 py-2 border rounded">Fermer</button><button type="submit" className="px-4 py-2 bg-[#1e2a5e] text-white rounded">Ok</button></div>
-             </form>
-           </div>
+          <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+            <h3 className="font-bold mb-4">{editingId ? "Modifier Filière" : "Nouvelle Filière"}</h3>
+            <form onSubmit={handleSaveFiliere} className="space-y-4">
+              <div><label className="text-xs font-bold uppercase">Nom</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={fName} onChange={e => setFName(e.target.value)} /></div>
+              <div><label className="text-xs font-bold uppercase">Niveaux</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={fLevels} onChange={e => setFLevels(e.target.value)} placeholder="L1, L2..." /></div>
+              <div className="flex justify-end space-x-2"><button type="button" onClick={() => setShowFiliereModal(false)} className="px-4 py-2 border rounded">Fermer</button><button type="submit" className="px-4 py-2 bg-[#1e2a5e] text-white rounded">Ok</button></div>
+            </form>
+          </div>
         </div>
       )}
 
       {showCategoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-           <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
-             <h3 className="font-bold mb-4">{editingId?"Modifier Catégorie":"Nouvelle Catégorie"}</h3>
-             <form onSubmit={handleSaveCategory} className="space-y-4">
-                <div><label className="text-xs font-bold uppercase">Nom</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={cName} onChange={e=>setCName(e.target.value)}/></div>
-                <div className="flex justify-end space-x-2"><button type="button" onClick={()=>setShowCategoryModal(false)} className="px-4 py-2 border rounded">Fermer</button><button type="submit" className="px-4 py-2 bg-[#1e2a5e] text-white rounded">Ok</button></div>
-             </form>
-           </div>
+          <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+            <h3 className="font-bold mb-4">{editingId ? "Modifier Catégorie" : "Nouvelle Catégorie"}</h3>
+            <form onSubmit={handleSaveCategory} className="space-y-4">
+              <div><label className="text-xs font-bold uppercase">Nom</label><input type="text" className="w-full border-slate-200 rounded text-sm" value={cName} onChange={e => setCName(e.target.value)} /></div>
+              <div className="flex justify-end space-x-2"><button type="button" onClick={() => setShowCategoryModal(false)} className="px-4 py-2 border rounded">Fermer</button><button type="submit" className="px-4 py-2 bg-[#1e2a5e] text-white rounded">Ok</button></div>
+            </form>
+          </div>
         </div>
       )}
     </div>

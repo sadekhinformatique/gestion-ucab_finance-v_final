@@ -21,15 +21,20 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lecture publique annonces" ON public.announcements;
+DROP POLICY IF EXISTS "Insertion annonces bureau" ON public.announcements;
+DROP POLICY IF EXISTS "Modification annonces bureau" ON public.announcements;
+DROP POLICY IF EXISTS "Suppression annonces admin" ON public.announcements;
+
 CREATE POLICY "Lecture publique annonces" ON public.announcements FOR SELECT USING (true);
 CREATE POLICY "Insertion annonces bureau" ON public.announcements FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('Admin', 'Trésorier', 'Président', 'Presidente', 'Commissaire'))
+    public.get_user_role() IN ('Admin', 'Trésorier', 'Président', 'Presidente', 'Commissaire')
 );
 CREATE POLICY "Modification annonces bureau" ON public.announcements FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('Admin', 'Trésorier', 'Président', 'Presidente', 'Commissaire'))
+    public.get_user_role() IN ('Admin', 'Trésorier', 'Président', 'Presidente', 'Commissaire')
 );
 CREATE POLICY "Suppression annonces admin" ON public.announcements FOR DELETE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'Admin')
+    public.get_user_role() = 'Admin'
 );
 
 -- 3. Bucket avatars
