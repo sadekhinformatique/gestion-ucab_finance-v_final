@@ -1,5 +1,4 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, History, FilePlus, Users, X, LogOut, Bell, Megaphone, UserCircle, Send, CheckSquare } from "lucide-react";
 import clsx from "clsx";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
@@ -7,6 +6,23 @@ import { useAuth } from "./AuthProvider";
 interface SidebarProps {
   onClose?: () => void;
 }
+
+const navItems = [
+  { name: "Actualités", to: "/actualites", icon: "newspaper" },
+  { name: "Mon Profil", to: "/mon-profil", icon: "person" },
+  { name: "Tableau de bord", to: "/dashboard", icon: "dashboard" },
+  { name: "Historique", to: "/historique", icon: "history" },
+  { name: "Mes Notifications", to: "/notifications", icon: "notifications" },
+  { name: "Nouvelle publication", to: "/nouvelle-publication", icon: "publish" },
+  { name: "Mes groupes", to: "/mes-groupes", icon: "groups" },
+  { name: "Nouvelle demande", to: "/nouvelle-demande", icon: "add_circle" },
+  { name: "Mes demandes", to: "/mes-demandes", icon: "receipt_long" },
+  { name: "Validation publications", to: "/validation-publications", icon: "check_circle", adminOnly: true },
+  { name: "Approbations", to: "/approbations", icon: "approval", adminOrBureau: true },
+  { name: "Nouvelle entrée", to: "/nouvelle-entree", icon: "payments", adminOrTresorier: true },
+  { name: "Gestion membres", to: "/gestion-membres", icon: "group", adminOrBureau: true },
+  { name: "Journal d'Audit", to: "/audit", icon: "receipt", adminOrCommissaire: true },
+];
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate();
@@ -17,86 +33,70 @@ export default function Sidebar({ onClose }: SidebarProps) {
     navigate("/");
   };
 
-  const navItems = [
-    { name: "Actualités", to: "/actualites", icon: Megaphone },
-    { name: "Mon Profil", to: "/mon-profil", icon: UserCircle },
-    { name: "Tableau de bord", to: "/dashboard", icon: LayoutDashboard },
-    { name: "Historique", to: "/historique", icon: History },
-    { name: "Mes Notifications", to: "/notifications", icon: Bell },
-    { name: "Nouvelle publication", to: "/nouvelle-publication", icon: Send },
-    { name: "Mes groupes", to: "/mes-groupes", icon: Users },
-    { name: "Nouvelle demande", to: "/nouvelle-demande", icon: FilePlus },
-    { name: "Mes demandes", to: "/mes-demandes", icon: History },
-    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier' || profile?.role?.toLowerCase() === 'présidente' || profile?.role?.toLowerCase() === 'président' || profile?.role?.toLowerCase() === 'commissaire'
-      ? [{ name: "Validation publications", to: "/validation-publications", icon: CheckSquare }]
-      : []),
-    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier' || profile?.role?.toLowerCase() === 'présidente' || profile?.role?.toLowerCase() === 'président'
-      ? [{ name: "Approbations", to: "/approbations", icon: FilePlus }]
-      : []),
-    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier'
-      ? [{ name: "Nouvelle entrée", to: "/nouvelle-entree", icon: FilePlus }]
-      : []),
-    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier' || profile?.role?.toLowerCase() === 'présidente' || profile?.role?.toLowerCase() === 'président'
-      ? [{ name: "Gestion membres", to: "/gestion-membres", icon: Users }]
-      : []),
-    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'commissaire'
-      ? [{ name: "Journal d'Audit", to: "/audit", icon: History }]
-      : [])
-  ];
+  const role = profile?.role?.toLowerCase() || "";
 
-  const displayName = profile ? `${profile.first_name} ${profile.last_name}` : user?.email?.split('@')[0] || "Connecté";
+  const visibleItems = navItems.filter((item) => {
+    if (!item.adminOnly && !item.adminOrBureau && !item.adminOrTresorier && !item.adminOrCommissaire) return true;
+    if (item.adminOnly && ["admin", "trésorier", "présidente", "président", "commissaire"].includes(role)) return true;
+    if (item.adminOrBureau && ["admin", "trésorier", "présidente", "président"].includes(role)) return true;
+    if (item.adminOrTresorier && ["admin", "trésorier"].includes(role)) return true;
+    if (item.adminOrCommissaire && ["admin", "commissaire"].includes(role)) return true;
+    return false;
+  });
+
+  const displayName = profile ? `${profile.first_name} ${profile.last_name}` : user?.email?.split("@")[0] || "Connecté";
   const initials = profile ? `${profile.first_name?.[0] || ""}${profile.last_name?.[0] || ""}`.toUpperCase() : "U";
 
   return (
-    <aside className="w-full bg-[#1e2a5e] flex flex-col h-full">
-      <div className="p-6 border-b border-white/10 flex items-center justify-between">
+    <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col py-stack-lg px-stack-sm z-50">
+      <div className="px-4 mb-stack-lg flex items-center justify-between">
         <div>
-          <h1 className="text-white font-bold text-xl tracking-tight uppercase">SAS Finance</h1>
-          <p className="text-blue-200 text-xs mt-1 opacity-70">Amicale UCAB Dakar</p>
+          <h1 className="font-h3 text-h3 font-semibold text-primary">UCAB Dakar</h1>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">Student Association</p>
         </div>
         {onClose && (
-          <button onClick={onClose} className="lg:hidden text-white/70 hover:text-white transition-colors">
-            <X className="w-6 h-6" />
+          <button onClick={onClose} className="lg:hidden text-on-surface-variant hover:text-primary transition-colors">
+            <span className="material-symbols-outlined">close</span>
           </button>
         )}
       </div>
 
-      <nav className="flex-1 p-4 space-y-2 mt-4 overflow-y-auto">
-        {navItems.map((item) => (
+      <nav className="flex-1 space-y-1 overflow-y-auto">
+        {visibleItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.to}
             onClick={onClose}
             className={({ isActive }) =>
               clsx(
-                "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-150",
                 isActive
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-blue-200 hover:bg-white/5"
+                  ? "bg-secondary-fixed text-on-secondary-fixed font-semibold"
+                  : "text-on-surface-variant hover:bg-surface-container"
               )
             }
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            <span>{item.name}</span>
+            <span className="material-symbols-outlined">{item.icon}</span>
+            <span className="font-label-caps text-label-caps">{item.name}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="pt-stack-lg border-t border-outline-variant space-y-2">
         <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 p-3 bg-[#12193b] text-white rounded-lg hover:bg-white/5 transition-colors mb-2 focus:outline-none"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-semibold">Déconnexion</span>
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all duration-150"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          <span className="font-label-caps text-label-caps">Déconnexion</span>
         </button>
-        <div className="flex items-center space-x-3 p-3 bg-[#12193b] text-white rounded-lg">
-          <div className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-xs font-bold shrink-0 text-white">
-            {initials || "U"}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-xs font-bold shrink-0">
+            {initials}
           </div>
-          <div className="text-sm min-w-0 pr-2">
-            <p className="font-semibold text-white truncate" title={displayName}>{displayName}</p>
-            <p className="text-xs text-blue-300 truncate">{profile?.role || "Utilisateur"}</p>
+          <div className="text-sm min-w-0">
+            <p className="font-semibold text-on-surface truncate">{displayName}</p>
+            <p className="text-[10px] text-on-surface-variant font-label-caps truncate">{profile?.role || "Utilisateur"}</p>
           </div>
         </div>
       </div>

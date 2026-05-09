@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
-import { Users, Loader2, ChevronRight, BookOpen } from "lucide-react";
 
 interface Groupe {
   id: number;
@@ -31,67 +30,97 @@ export default function MesGroupes() {
       });
   }, [profile]);
 
-  const filieres = groupes.filter(g => g.type === 'filiere');
-  const niveaux = groupes.filter(g => g.type === 'niveau');
+  const filieres = groupes.filter((g) => g.type === "filiere");
+  const niveaux = groupes.filter((g) => g.type === "niveau");
 
-  if (loading) return <div className="text-center py-12"><Loader2 className="w-8 h-8 animate-spin inline text-slate-400" /></div>;
+  if (loading) return <div className="text-center py-12"><span className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full inline-block" /></div>;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h2 className="text-xl font-black text-slate-800">Mes Groupes</h2>
+    <div className="space-y-gutter">
+      <div className="border-b border-outline-variant pb-stack-md">
+        <h2 className="font-h1 text-h1 text-primary">Mes Groupes</h2>
+        <p className="font-body-md text-on-surface-variant">Retrouvez vos groupes par filière et niveau</p>
+      </div>
+
+      <div className="flex items-center gap-gutter">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-stack-md flex-1">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary-container/20 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">group</span>
+            </div>
+            <div>
+              <p className="text-[12px] font-label-caps text-on-surface-variant">Total Groupes</p>
+              <p className="font-h3 text-h3 text-primary">{groupes.length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-stack-md flex-1">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-secondary-fixed/30 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-secondary">school</span>
+            </div>
+            <div>
+              <p className="text-[12px] font-label-caps text-on-surface-variant">Filières</p>
+              <p className="font-h3 text-h3 text-secondary">{filieres.length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-stack-md flex-1">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-tertiary-fixed/20 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-tertiary">layers</span>
+            </div>
+            <div>
+              <p className="text-[12px] font-label-caps text-on-surface-variant">Niveaux</p>
+              <p className="font-h3 text-h3 text-tertiary">{niveaux.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {groupes.length === 0 ? (
-        <div className="text-center py-12 text-slate-400">
-          <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <div className="text-center py-12 text-on-surface-variant">
+          <span className="material-symbols-outlined text-5xl mb-3 opacity-50">groups</span>
           <p className="font-medium">Vous n'êtes dans aucun groupe</p>
           <p className="text-sm">Ils seront créés automatiquement quand l'administrateur configurera les groupes.</p>
         </div>
       ) : (
-        <>
-          {filieres.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-slate-500 uppercase">Filières</h3>
-              {filieres.map(g => (
-                <Link key={g.id} to={`/groupe/${g.id}`} className="block bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:border-[#1e2a5e] transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-[#1e2a5e]/10 flex items-center justify-center">
-                        <BookOpen className="w-5 h-5 text-[#1e2a5e]" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800">{g.name}</p>
-                        <p className="text-xs text-slate-400">{g.role === 'admin_groupe' ? 'Responsable' : 'Membre'}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-300" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+          {groupes.map((g) => (
+            <Link
+              key={g.id}
+              to={`/groupe/${g.id}`}
+              className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden hover:shadow-md transition-all group"
+            >
+              <div className="h-32 bg-primary relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-container opacity-90" />
+                <div className="absolute top-3 right-3">
+                  <span className="bg-on-primary/20 text-on-primary text-[10px] font-label-caps px-2 py-0.5 rounded-full uppercase">
+                    {g.type === "filiere" ? "Filière" : "Niveau"}
+                  </span>
+                </div>
+                <div className="absolute bottom-3 left-4">
+                  <h3 className="font-h3 text-h3 text-on-primary">{g.name}</h3>
+                </div>
+              </div>
+              <div className="p-4">
+                <p className="text-body-sm text-on-surface-variant line-clamp-2 mb-3">
+                  {g.description || `Groupe de ${g.type === "filiere" ? "filière" : "niveau"}`}
+                </p>
+                <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                    <span className="material-symbols-outlined text-sm">group</span>
+                    <span>{g.member_count || 0} membres</span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {niveaux.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-slate-500 uppercase">Niveaux</h3>
-              {niveaux.map(g => (
-                <Link key={g.id} to={`/groupe/${g.id}`} className="block bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:border-[#1e2a5e] transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800">{g.name}</p>
-                        <p className="text-xs text-slate-400">{g.role === 'admin_groupe' ? 'Responsable' : 'Membre'}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-300" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </>
+                  <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Accéder
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

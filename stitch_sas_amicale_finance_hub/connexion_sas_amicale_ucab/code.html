@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e0e3e8",
+                    "inverse-primary": "#b9c3ff",
+                    "tertiary": "#001e1a",
+                    "on-background": "#181c20",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f1f4f9",
+                    "surface-bright": "#f7f9ff",
+                    "on-surface-variant": "#45464f",
+                    "inverse-surface": "#2d3135",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#b9c3ff",
+                    "on-secondary-fixed-variant": "#6f3800",
+                    "secondary": "#8e4e14",
+                    "background": "#f7f9ff",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#dde1ff",
+                    "tertiary-container": "#00352f",
+                    "on-tertiary-fixed": "#00201c",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#37a698",
+                    "primary": "#061449",
+                    "on-primary-container": "#8793cd",
+                    "secondary-container": "#ffab69",
+                    "surface-dim": "#d7dadf",
+                    "on-tertiary-fixed-variant": "#005048",
+                    "secondary-fixed": "#ffdcc4",
+                    "surface-container": "#ebeef3",
+                    "surface": "#f7f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#c6c5d1",
+                    "on-secondary-container": "#783d01",
+                    "primary-container": "#1e2a5e",
+                    "surface-container-high": "#e5e8ee",
+                    "on-primary-fixed-variant": "#384378",
+                    "tertiary-fixed": "#8cf5e4",
+                    "on-primary-fixed": "#08164b",
+                    "on-secondary-fixed": "#2f1400",
+                    "inverse-on-surface": "#eef1f6",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#181c20",
+                    "surface-container-highest": "#e0e3e8",
+                    "secondary-fixed-dim": "#ffb780",
+                    "outline": "#767680",
+                    "tertiary-fixed-dim": "#6fd8c8",
+                    "surface-tint": "#505b92"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "40px",
+                    "stack-lg": "24px",
+                    "unit": "8px",
+                    "container-max": "1280px",
+                    "stack-md": "16px",
+                    "margin-mobile": "16px",
+                    "stack-sm": "8px"
+            },
+            "fontFamily": {
+                    "h3": ["Poppins"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h1": ["Poppins"],
+                    "h2": ["Poppins"],
+                    "label-caps": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "h1-mobile": ["Poppins"]
+            },
+            "fontSize": {
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h1-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9ff;
+            background-image: radial-gradient(at 0% 0%, #dde1ff 0px, transparent 50%), radial-gradient(at 100% 100%, #ffab69 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface flex items-center justify-center p-gutter">
+<main class="w-full max-w-md">
+<!-- Brand Identity Container -->
+<div class="flex flex-col items-center mb-stack-lg">
+<div class="mb-stack-md bg-surface-container-lowest p-unit rounded-xl shadow-sm">
+<img alt="SAS Logo" class="w-20 h-20 object-contain rounded-lg" data-alt="A professional and academic logo for a student association named SAS Amicale UCAB Dakar. The logo features a minimalist shield emblem with a stylized open book and a laurel wreath, rendered in deep navy blue and gold. The style is clean, modern corporate, set against a bright, professional light-mode background with soft global illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaZPJqUte7dqoYCLqnmcK0mg_rrZmdyEUfTUydypjJ_ijg-ALYAcAwyVP7d-z4gT1Vb_e04ZiEUGp3YFtKtpaeome2_07zAaR-Ry3K7m7XLk7Z6r8wtsHL_npRKeXoF5isknD_AUzCFX2WS3-rElzuhX8HKTw1RfwgDCGNitnfO6aIlZJUDcZCG0oMEq1p6s82IvDuWmW6n-ykbj4SyDU8opdPshfRnPsiLOwZ3vSrUTXPTnYlfws5RfbxQGHwKc4XawGXkouye6Q"/>
+</div>
+<h1 class="font-h2 text-h2 text-primary text-center">SAS – Amicale UCAB Dakar</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center mt-unit">Institutional Trust &amp; Fiscal Responsibility</p>
+</div>
+<!-- Login Card -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-stack-lg md:p-margin-desktop">
+<div class="mb-stack-lg">
+<h2 class="font-h3 text-h3 text-primary mb-unit">Bienvenue</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Veuillez vous connecter à votre espace membre.</p>
+</div>
+<form class="space-y-stack-md">
+<!-- Card Number Input -->
+<div class="space-y-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="student_id">Numéro carte étudiant</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">badge</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-bright border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="student_id" name="student_id" placeholder="Ex: 20230001" type="text"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-unit">
+<div class="flex justify-between items-center">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="password">Mot de passe</label>
+<a class="font-body-sm text-body-sm text-secondary hover:underline transition-all" href="#">Mot de passe oublié</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-bright border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="password" name="password" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<!-- Primary Action -->
+<div class="pt-unit">
+<button class="w-full bg-primary text-on-primary font-semibold py-3.5 px-stack-md rounded-lg shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-stack-sm" type="submit">
+<span>Se connecter</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>
+</button>
+</div>
+</form>
+<!-- Divider -->
+<div class="relative my-stack-lg flex items-center">
+<div class="flex-grow border-t border-outline-variant"></div>
+<span class="flex-shrink mx-4 font-label-caps text-label-caps text-outline">OU</span>
+<div class="flex-grow border-t border-outline-variant"></div>
+</div>
+<!-- Secondary Action -->
+<div class="text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-stack-sm">Nouveau membre de l'UCAB ?</p>
+<a class="inline-flex items-center justify-center w-full bg-secondary-fixed text-on-secondary-fixed font-semibold py-3 px-stack-md rounded-lg hover:bg-secondary-container transition-all border border-transparent" href="#">
+                    Créer un compte
+                </a>
+</div>
+</section>
+<!-- Institutional Footer Info -->
+<footer class="mt-stack-lg text-center px-gutter">
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-70">
+                © 2024 SAS – Amicale UCAB Dakar
+            </p>
+<div class="flex justify-center gap-stack-md mt-unit">
+<a class="font-label-caps text-[10px] text-outline hover:text-primary transition-colors" href="#">POLITIQUE DE CONFIDENTIALITÉ</a>
+<a class="font-label-caps text-[10px] text-outline hover:text-primary transition-colors" href="#">SUPPORT TECHNIQUE</a>
+</div>
+</footer>
+</main>
+</body></html>

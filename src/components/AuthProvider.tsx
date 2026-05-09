@@ -8,6 +8,11 @@ interface Profile {
   first_name: string;
   last_name: string;
   role: string;
+  filiere?: string;
+  niveau?: string;
+  birth_date?: string;
+  photo_url?: string;
+  is_active?: boolean;
 }
 
 interface AuthContextType {

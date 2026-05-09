@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e0e3e8",
+                    "inverse-primary": "#b9c3ff",
+                    "tertiary": "#001e1a",
+                    "on-background": "#181c20",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f1f4f9",
+                    "surface-bright": "#f7f9ff",
+                    "on-surface-variant": "#45464f",
+                    "inverse-surface": "#2d3135",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#b9c3ff",
+                    "on-secondary-fixed-variant": "#6f3800",
+                    "secondary": "#8e4e14",
+                    "background": "#f7f9ff",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#dde1ff",
+                    "tertiary-container": "#00352f",
+                    "on-tertiary-fixed": "#00201c",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#37a698",
+                    "primary": "#061449",
+                    "on-primary-container": "#8793cd",
+                    "secondary-container": "#ffab69",
+                    "surface-dim": "#d7dadf",
+                    "on-tertiary-fixed-variant": "#005048",
+                    "secondary-fixed": "#ffdcc4",
+                    "surface-container": "#ebeef3",
+                    "surface": "#f7f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#c6c5d1",
+                    "on-secondary-container": "#783d01",
+                    "primary-container": "#1e2a5e",
+                    "surface-container-high": "#e5e8ee",
+                    "on-primary-fixed-variant": "#384378",
+                    "tertiary-fixed": "#8cf5e4",
+                    "on-primary-fixed": "#08164b",
+                    "on-secondary-fixed": "#2f1400",
+                    "inverse-on-surface": "#eef1f6",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#181c20",
+                    "surface-container-highest": "#e0e3e8",
+                    "secondary-fixed-dim": "#ffb780",
+                    "outline": "#767680",
+                    "tertiary-fixed-dim": "#6fd8c8",
+                    "surface-tint": "#505b92"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "40px",
+                    "stack-lg": "24px",
+                    "unit": "8px",
+                    "container-max": "1280px",
+                    "stack-md": "16px",
+                    "margin-mobile": "16px",
+                    "stack-sm": "8px"
+            },
+            "fontFamily": {
+                    "h3": ["Poppins"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h1": ["Poppins"],
+                    "h2": ["Poppins"],
+                    "label-caps": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "h1-mobile": ["Poppins"]
+            },
+            "fontSize": {
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h1-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface-bright border-b border-outline-variant shadow-sm docked full-width top-0 z-50 fixed w-full">
+<div class="flex justify-between items-center px-gutter py-unit w-full max-w-container-max mx-auto h-16">
+<div class="flex items-center gap-stack-md">
+<span class="font-h3 text-h3 font-semibold text-primary">SAS – Amicale UCAB Dakar</span>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="p-2 hover:bg-surface-container-low transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="flex items-center gap-stack-sm p-2 hover:bg-surface-container-low transition-colors rounded-full text-primary border-b-2 border-primary">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="font-body-sm text-body-sm px-4 py-2 bg-primary text-on-primary rounded-lg">Settings</button>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm pt-20 flex flex-col py-stack-lg px-stack-sm space-y-stack-sm hidden md:flex">
+<div class="px-4 mb-stack-lg">
+<h2 class="font-h3 text-h3 font-semibold text-primary">UCAB Dakar</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-70">Student Association</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-caps text-label-caps">History</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-caps text-label-caps">New Request</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Member Management</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="newspaper">newspaper</span>
+<span class="font-label-caps text-label-caps">News</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-caps text-label-caps">My Groups</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="publish">publish</span>
+<span class="font-label-caps text-label-caps">Pending Publications</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-surface-container rounded-lg transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+<span class="font-label-caps text-label-caps">Exports</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pb-stack-lg">
+<button class="flex items-center gap-3 w-full text-error px-4 py-3 hover:bg-error-container rounded-lg transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Se déconnecter</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 px-margin-mobile md:px-margin-desktop pb-stack-lg min-h-screen">
+<div class="max-w-container-max mx-auto space-y-gutter">
+<!-- Profile Header -->
+<section class="bg-surface-container-lowest rounded-xl p-stack-lg shadow-sm border border-outline-variant flex flex-col md:flex-row items-center gap-gutter">
+<div class="relative">
+<img alt="User profile avatar" class="w-32 h-32 rounded-full object-cover border-4 border-surface-container" data-alt="A professional close-up portrait of a young African male student leader, wearing a modern navy blue blazer. He has a warm, confident expression and is positioned against a clean, softly blurred academic hallway background. The lighting is bright and natural, reflecting an institutional and trustworthy atmosphere aligned with a prestigious university." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc5uME--tHO8CUj0bBvESQx16BFBsacXHfzFv_Tx3_KZxDnBb7F1jA_0UEJKqpsKN1K4syLGK87jfjjQbNjBA6QVrnJPe4tCdzr8f2ozodRPbUdPsrIynJF5tnJkpFXfIPLr7RcVuX0-3K7Zt1HFgb0jIA9BDBT0ArDUEvZzeidm0P3ZYAiBK-Y81qkXahut8NKbqqDmuTDW-qAG890_BuPg43Ul3TOk5QZBEiAaxjo9Cv4aEBpsVSJysoP8Q-n5Ok5QJn0b2bQJ8"/>
+<button class="absolute bottom-0 right-0 bg-primary text-on-primary p-2 rounded-full shadow-lg hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]" data-icon="photo_camera">photo_camera</span>
+</button>
+</div>
+<div class="text-center md:text-left flex-1">
+<h1 class="font-h1 text-h1 text-primary">Moussa Diop</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Master en Finance d'Entreprise</p>
+<div class="mt-stack-sm flex flex-wrap justify-center md:justify-start gap-stack-sm">
+<span class="bg-primary-fixed text-on-primary-fixed px-3 py-1 rounded-full font-label-caps text-label-caps">Membre Actif</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-label-caps text-label-caps">UCAB Dakar</span>
+</div>
+</div>
+<div class="flex gap-stack-md">
+<button class="px-6 py-3 bg-primary text-on-primary rounded-lg font-semibold shadow-sm hover:translate-y-[-2px] transition-all">Sauvegarder les modifications</button>
+</div>
+</section>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Information -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Personal Information (Non-editable) -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-lg shadow-sm border border-outline-variant">
+<div class="flex items-center gap-stack-sm mb-stack-lg">
+<span class="material-symbols-outlined text-primary" data-icon="badge">badge</span>
+<h2 class="font-h2 text-h2 text-primary">Informations Personnelles</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider">Identifiant Carte UCAB</label>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant font-semibold">UCAB-2024-8842</div>
+</div>
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider">Nom Complet</label>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant font-semibold">Moussa Diop</div>
+</div>
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider">Département</label>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant font-semibold">Faculté des Sciences Économiques</div>
+</div>
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider">Date d'adhésion</label>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant font-semibold">12 Septembre 2023</div>
+</div>
+</div>
+</div>
+<!-- Account Settings (Editable) -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-lg shadow-sm border border-outline-variant">
+<div class="flex items-center gap-stack-sm mb-stack-lg">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+<h2 class="font-h2 text-h2 text-primary">Paramètres du Compte</h2>
+</div>
+<form class="space-y-stack-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant">Numéro de téléphone</label>
+<input class="w-full p-3 bg-surface-bright border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="tel" value="+221 77 123 45 67"/>
+</div>
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant">Email Institutionnel</label>
+<input class="w-full p-3 bg-surface-container-low border border-outline-variant rounded text-on-surface-variant cursor-not-allowed" disabled="" type="email" value="m.diop@ucab.edu.sn"/>
+</div>
+</div>
+<div class="border-t border-outline-variant pt-stack-lg">
+<h3 class="font-h3 text-h3 text-primary mb-stack-md">Changer le mot de passe</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant">Nouveau mot de passe</label>
+<input class="w-full p-3 bg-surface-bright border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password"/>
+</div>
+<div class="space-y-unit">
+<label class="font-body-sm text-body-sm text-on-surface-variant">Confirmer le mot de passe</label>
+<input class="w-full p-3 bg-surface-bright border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password"/>
+</div>
+</div>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Column: Activity History -->
+<div class="lg:col-span-4">
+<div class="bg-surface-container-lowest rounded-xl p-stack-lg shadow-sm border border-outline-variant h-full">
+<div class="flex items-center gap-stack-sm mb-stack-lg">
+<span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span>
+<h2 class="font-h2 text-h2 text-primary">Historique d'Activité</h2>
+</div>
+<div class="space-y-stack-lg">
+<!-- Publication 1 -->
+<div class="relative pl-8 before:content-[''] before:absolute before:left-[11px] before:top-8 before:bottom-[-24px] before:w-[2px] before:bg-outline-variant last:before:hidden">
+<span class="material-symbols-outlined absolute left-0 top-0 text-primary bg-primary-fixed rounded-full p-1 text-[16px]" data-icon="publish">publish</span>
+<div class="space-y-1">
+<p class="font-body-md text-body-md font-semibold">Publication postée</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Appel à candidatures pour le club de Finance...</p>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps opacity-60">Il y a 2 heures</span>
+<span class="bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Validé</span>
+</div>
+</div>
+</div>
+<!-- Update 2 -->
+<div class="relative pl-8 before:content-[''] before:absolute before:left-[11px] before:top-8 before:bottom-[-24px] before:w-[2px] before:bg-outline-variant last:before:hidden">
+<span class="material-symbols-outlined absolute left-0 top-0 text-secondary bg-secondary-fixed rounded-full p-1 text-[16px]" data-icon="update">update</span>
+<div class="space-y-1">
+<p class="font-body-md text-body-md font-semibold">Mise à jour de profil</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Modification du numéro de téléphone.</p>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps opacity-60">Hier à 14:30</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Terminé</span>
+</div>
+</div>
+</div>
+<!-- Publication 3 -->
+<div class="relative pl-8">
+<span class="material-symbols-outlined absolute left-0 top-0 text-primary bg-primary-fixed rounded-full p-1 text-[16px]" data-icon="edit_note">edit_note</span>
+<div class="space-y-1">
+<p class="font-body-md text-body-md font-semibold">Brouillon créé</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Rapport trimestriel des activités étudiantes.</p>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps opacity-60">3 Octobre 2024</span>
+<span class="bg-surface-variant text-on-surface-variant text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Brouillon</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-stack-lg py-3 border border-outline-variant rounded-lg font-label-caps text-label-caps text-primary hover:bg-surface-container-low transition-colors uppercase tracking-widest">Voir tout l'historique</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant mt-stack-lg md:ml-64">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-stack-lg max-w-container-max mx-auto gap-stack-md">
+<div class="flex flex-col items-center md:items-start">
+<span class="font-label-caps text-label-caps text-primary mb-2">SAS – Amicale UCAB Dakar</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2024 SAS – Amicale UCAB Dakar. Institutional Trust &amp; Fiscal Responsibility.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-stack-md">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-opacity" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-opacity" href="#">Terms of Service</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-opacity" href="#">Financial Regulations</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-opacity" href="#">Support</a>
+</div>
+</div>
+</footer>
+</body></html>
