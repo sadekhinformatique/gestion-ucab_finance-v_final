@@ -115,15 +115,25 @@ ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
+-- 0. Fonction utilitaire pour éviter la récursion RLS
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid()
+$$;
+
 -- 3a. PROFILES
 CREATE POLICY "Lecture du profil utilisateur" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Le bureau peut lire tous les profils" ON public.profiles FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('Admin', 'Trésorier', 'Président', 'Presidente'))
+    public.get_user_role() IN ('Admin', 'Trésorier', 'Président', 'Presidente')
 );
 CREATE POLICY "Insertion profil par l'utilisateur" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Mise à jour propre profil" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Admin peut modifier tous les profils" ON public.profiles FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'Admin')
+    public.get_user_role() = 'Admin'
 );
 
 -- 3b. TRANSACTIONS
