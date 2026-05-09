@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, History, FilePlus, Users, X, LogOut, Bell, Megaphone, UserCircle } from "lucide-react";
+import { LayoutDashboard, History, FilePlus, Users, X, LogOut, Bell, Megaphone, UserCircle, Send, CheckSquare } from "lucide-react";
 import clsx from "clsx";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
@@ -19,12 +19,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const navItems = [
     { name: "Actualités", to: "/actualites", icon: Megaphone },
-    { name: "Mon Profil", to: "/profil", icon: UserCircle },
+    { name: "Mon Profil", to: "/mon-profil", icon: UserCircle },
     { name: "Tableau de bord", to: "/dashboard", icon: LayoutDashboard },
     { name: "Historique", to: "/historique", icon: History },
     { name: "Mes Notifications", to: "/notifications", icon: Bell },
+    { name: "Nouvelle publication", to: "/nouvelle-publication", icon: Send },
+    { name: "Mes groupes", to: "/mes-groupes", icon: Users },
     { name: "Nouvelle demande", to: "/nouvelle-demande", icon: FilePlus },
     { name: "Mes demandes", to: "/mes-demandes", icon: History },
+    ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier' || profile?.role?.toLowerCase() === 'présidente' || profile?.role?.toLowerCase() === 'président' || profile?.role?.toLowerCase() === 'commissaire'
+      ? [{ name: "Validation publications", to: "/validation-publications", icon: CheckSquare }]
+      : []),
     ...(profile?.role?.toLowerCase() === 'admin' || profile?.role?.toLowerCase() === 'trésorier' || profile?.role?.toLowerCase() === 'présidente' || profile?.role?.toLowerCase() === 'président'
       ? [{ name: "Approbations", to: "/approbations", icon: FilePlus }]
       : []),

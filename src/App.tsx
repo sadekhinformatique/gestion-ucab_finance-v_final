@@ -12,7 +12,11 @@ import MyRequests from "./pages/MyRequests";
 import MembersManagement from "./pages/MembersManagement";
 import AuditLogs from "./pages/AuditLogs";
 import Notifications from "./pages/Notifications";
-import Profile from "./pages/Profile";
+import MonProfil from "./pages/MonProfil";
+import NewPublication from "./pages/NewPublication";
+import ValidationPublications from "./pages/ValidationPublications";
+import MesGroupes from "./pages/MesGroupes";
+import GroupeDetail from "./pages/GroupeDetail";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./components/AuthProvider";
 
@@ -36,7 +40,12 @@ export default function App() {
             <Route path="/gestion-membres" element={<MembersManagement />} />
             <Route path="/audit" element={<AuditLogs />} />
             <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profil" element={<Profile />} />
+            <Route path="/profil" element={<MonProfil />} />
+            <Route path="/mon-profil" element={<MonProfil />} />
+            <Route path="/nouvelle-publication" element={<NewPublication />} />
+            <Route path="/validation-publications" element={<ValidationPublications />} />
+            <Route path="/mes-groupes" element={<MesGroupes />} />
+            <Route path="/groupe/:id" element={<GroupeDetail />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />
