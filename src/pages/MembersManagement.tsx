@@ -88,7 +88,6 @@ export default function MembersManagement() {
         const { error: updErr } = await supabase.from('profiles').update(dataObj).eq('id', editingId);
         if (updErr) throw updErr;
 
-        // Notification de modification
         await supabase.from('notifications').insert([{
            user_id: editingId,
            title: 'Profil Mis à Jour',
@@ -98,10 +97,11 @@ export default function MembersManagement() {
            link: '/dashboard'
         }]);
       } else {
+        const { data: { session: adminSession } } = await supabase.auth.getSession();
+        
         const email = `${mCard.toLowerCase()}@temp.ucab`;
         const initialPassword = `${mFirstName.toLowerCase().replace(/\s/g, '')}${new Date().getFullYear()}`;
         
-        // Supabase SignUp logue l'utilisateur. En frontend, cela deconnectera l'admin.
         const { data: authData, error: authErr } = await supabase.auth.signUp({
           email,
           password: initialPassword,
@@ -126,6 +126,13 @@ export default function MembersManagement() {
           }]);
         }
         setGeneratedPwd(`Email (Login) : ${email} | MDP : ${initialPassword}`);
+
+        if (adminSession) {
+          await supabase.auth.setSession({
+            access_token: adminSession.access_token,
+            refresh_token: adminSession.refresh_token
+          });
+        }
         
         await logAction(profile?.id, "creation_membre", { card_number: mCard, email });
       }
