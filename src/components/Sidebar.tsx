@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, History, FilePlus, Users, X, LogOut, Bell } from "lucide-react";
+import { LayoutDashboard, History, FilePlus, Users, X, LogOut, Bell, Megaphone, UserCircle } from "lucide-react";
 import clsx from "clsx";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
@@ -18,6 +18,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
   };
 
   const navItems = [
+    { name: "Actualités", to: "/actualites", icon: Megaphone },
+    { name: "Mon Profil", to: "/profil", icon: UserCircle },
     { name: "Tableau de bord", to: "/dashboard", icon: LayoutDashboard },
     { name: "Historique", to: "/historique", icon: History },
     { name: "Mes Notifications", to: "/notifications", icon: Bell },

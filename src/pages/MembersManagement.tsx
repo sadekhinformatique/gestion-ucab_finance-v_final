@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { UserPlus, Search, Shield, XCircle, CheckCircle, Edit, BookOpen, Tags, Key } from "lucide-react";
+import { UserPlus, Search, Shield, XCircle, CheckCircle, Edit, BookOpen, Tags, Key, Clock, UserCheck, UserX } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
 import { logAction } from "../lib/audit";
 
-type TabType = 'membres' | 'filieres' | 'categories';
+type TabType = 'membres' | 'inscriptions' | 'filieres' | 'categories';
 
 export default function MembersManagement() {
   const { profile } = useAuth();
@@ -37,6 +37,12 @@ export default function MembersManagement() {
   const [cName, setCName] = useState('');
   const [generatedPwd, setGeneratedPwd] = useState<string | null>(null);
 
+  const [pendingMembers, setPendingMembers] = useState<any[]>([]);
+  const [approveCard, setApproveCard] = useState('');
+  const [approveRole, setApproveRole] = useState('Membre');
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
   useEffect(() => {
     if (isAdmin) {
       fetchData();
@@ -63,6 +69,63 @@ export default function MembersManagement() {
       setError("Erreur lors du chargement des données.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPending = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('profiles').select('*').eq('is_active', false).is('card_number', null).order('created_at', { ascending: false });
+    if (data) setPendingMembers(data);
+    setLoading(false);
+  };
+
+  const approveMember = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const { error: updErr } = await supabase.from('profiles').update({
+        is_active: true,
+        card_number: approveCard || null,
+        role: approveRole,
+      }).eq('id', id);
+      if (updErr) throw updErr;
+
+      await supabase.from('notifications').insert([{
+        user_id: id,
+        title: 'Compte approuvé',
+        content: `Votre inscription a été approuvée. Vous avez le rôle: ${approveRole}. Connectez-vous avec votre email.`,
+        message: `Compte approuvé ! Rôle: ${approveRole}.`,
+        type: 'approbation_compte',
+        link: '/profil'
+      }]);
+
+      await logAction(profile?.id, 'approbation_membre', { member_id: id, card_number: approveCard, role: approveRole });
+      setShowApproveModal(false);
+      setApproveCard('');
+      setApproveRole('Membre');
+      fetchPending();
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const rejectMember = async (id: string) => {
+    if (!confirm('Désactiver cette inscription ? Le membre pourra être réactivé plus tard.')) return;
+    try {
+      await supabase.from('profiles').update({ is_active: false }).eq('id', id);
+      await supabase.from('notifications').insert([{
+        user_id: id,
+        title: 'Inscription refusée',
+        content: 'Votre demande d\'inscription a été refusée par l\'administration.',
+        message: 'Inscription refusée.',
+        type: 'refus_compte'
+      }]);
+      await logAction(profile?.id, 'refus_membre', { member_id: id });
+      fetchPending();
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
     }
   };
 
@@ -214,6 +277,7 @@ export default function MembersManagement() {
 
       <div className="flex flex-wrap space-x-2 border-b border-slate-200">
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'membres' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('membres')}><Shield className="w-4 h-4" /><span>Membres</span></button>
+        <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'inscriptions' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => { setActiveTab('inscriptions'); setLoading(true); fetchPending(); }}><Clock className="w-4 h-4" /><span>En attente</span></button>
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'filieres' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('filieres')}><BookOpen className="w-4 h-4" /><span>Filières</span></button>
         <button className={`flex items-center space-x-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'categories' ? 'border-[#1e2a5e] text-[#1e2a5e]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setActiveTab('categories')}><Tags className="w-4 h-4" /><span>Catégories</span></button>
       </div>
@@ -252,7 +316,75 @@ export default function MembersManagement() {
         </div>
       )}
 
-      {/* MODALS implementation here (Member, Filiere, Category)... (simili) */}
+      {activeTab === 'inscriptions' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+          <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="font-bold text-slate-700">Inscriptions en attente d'approbation</h3>
+            <p className="text-xs text-slate-500 mt-1">Ces étudiants se sont inscrits via le formulaire public et attendent votre validation.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead><tr className="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-50"><th className="px-6 py-4">Membre</th><th className="px-6 py-4">Scolarité</th><th className="px-6 py-4">Photo</th><th className="px-6 py-4">Inscrit le</th><th className="px-6 py-4 text-right">Actions</th></tr></thead>
+              <tbody className="text-sm text-slate-600">
+                {loading && <tr><td colSpan={5} className="text-center py-8">Chargement...</td></tr>}
+                {!loading && pendingMembers.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-slate-400">Aucune inscription en attente</td></tr>}
+                {!loading && pendingMembers.map((m) => (
+                  <tr key={m.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs uppercase border border-amber-200">
+                          {m.first_name?.charAt(0) || m.last_name?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800">{m.last_name} {m.first_name}</div>
+                          <div className="text-[11px] text-slate-400">{m.email ? m.email.split('@')[0] : ''}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="text-xs font-semibold">{m.filiere}</div><div className="text-[11px] text-slate-400">{m.niveau}</div></td>
+                    <td className="px-6 py-4">{m.photo_url ? <img src={m.photo_url} alt="" className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-slate-100" />}</td>
+                    <td className="px-6 py-4 text-xs text-slate-500">{new Date(m.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button onClick={() => { setApprovingId(m.id); setApproveCard(''); setApproveRole('Membre'); setShowApproveModal(true); }} className="inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-[11px] font-bold rounded hover:bg-emerald-700"><UserCheck className="w-3 h-3 mr-1" /> Approuver</button>
+                        <button onClick={() => rejectMember(m.id)} className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 text-[11px] font-bold rounded hover:bg-red-200"><UserX className="w-3 h-3 mr-1" /> Refuser</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showApproveModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+            <h3 className="font-bold mb-4">Approuver l'inscription</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase text-slate-600">Carte Étudiant (optionnel)</label>
+                <input type="text" value={approveCard} onChange={e => setApproveCard(e.target.value)}
+                  className="w-full border border-slate-200 rounded text-sm px-3 py-2" placeholder="EX: 20260001" />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-slate-600">Rôle</label>
+                <select value={approveRole} onChange={e => setApproveRole(e.target.value)}
+                  className="w-full border border-slate-200 rounded text-sm px-3 py-2">
+                  <option>Membre</option><option>Trésorier</option><option>Président</option><option>Presidente</option><option>Commissaire</option>
+                </select>
+              </div>
+              <div className="flex justify-end space-x-2 pt-2">
+                <button type="button" onClick={() => setShowApproveModal(false)} className="px-4 py-2 border rounded text-sm">Annuler</button>
+                <button type="button" onClick={() => approvingId && approveMember(approvingId)} disabled={actionLoading}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded text-sm font-bold">{actionLoading ? '...' : 'Approuver'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showMemberModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center p-4">
            <div className="bg-white p-6 rounded-xl w-full max-w-xl shadow-2xl">

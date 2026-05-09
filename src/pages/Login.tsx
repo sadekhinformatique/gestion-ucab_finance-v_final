@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Lock, CreditCard, Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { logAction } from "../lib/audit";
@@ -181,6 +181,19 @@ export default function Login() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <span className="text-sm text-slate-500">Vous êtes étudiant ? </span>
+            <Link to="/inscription" className="text-sm font-bold text-[#1e2a5e] hover:underline">
+              Créer un compte membre
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-4 text-center">
+          <Link to="/actualites" className="text-xs text-slate-400 hover:text-slate-600 underline">
+            Voir les actualités publiques
+          </Link>
         </div>
       </div>
     </div>
