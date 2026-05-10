@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     filiere TEXT,
     niveau TEXT,
     birth_date DATE,
+    email TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

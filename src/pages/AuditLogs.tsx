@@ -20,7 +20,7 @@ export default function AuditLogs() {
     if (!canView) return;
     
     async function fetchProfiles() {
-      const { data } = await supabase.from('profiles').select('id, first_name, last_name, email');
+      const { data } = await supabase.from('profiles').select('id, first_name, last_name');
       if (data) {
         const pMap: Record<string, any> = {};
         data.forEach(p => pMap[p.id] = p);

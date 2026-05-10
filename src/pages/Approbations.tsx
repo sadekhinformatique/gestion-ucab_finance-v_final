@@ -45,7 +45,7 @@ export default function Approbations() {
         .from('expense_requests')
         .select(`
           *,
-          member:profiles!expense_requests_member_id_fkey(first_name, last_name, email),
+          member:profiles!expense_requests_member_id_fkey(first_name, last_name),
           category:expense_categories(name)
         `)
         .order('created_at', { ascending: false });

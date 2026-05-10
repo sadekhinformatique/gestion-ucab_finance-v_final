@@ -1,7 +1,7 @@
 import pg from 'pg';
 const client = new pg.Client({
   host: 'aws-0-eu-west-1.pooler.supabase.com', port: 5432,
-  user: 'postgres.brfnxwrzabknhvyuqnwe', password: 'Dspro1814@2027',
+  user: 'postgres.brfnxwrzabknhvyuqnwe', password: process.env.SUPABASE_DB_PASSWORD,
   database: 'postgres', connectionTimeoutMillis: 8000,
 });
 await client.connect();
