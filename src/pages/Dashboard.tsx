@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export default function Dashboard() {
   const { profile } = useAuth();
+  const channelsRef = useRef<RealtimeChannel[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,18 +64,28 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-    const transactionsSub = supabase
+
+    channelsRef.current.forEach(ch => supabase.removeChannel(ch));
+    channelsRef.current = [];
+
+    const transactionsCh = supabase
       .channel("public:transactions")
       .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, () => loadData())
       .subscribe();
-    let notifsSub: any;
+    channelsRef.current.push(transactionsCh);
+
     if (profile?.id) {
-      notifsSub = supabase
+      const notifsCh = supabase
         .channel(`public:notifications:user_id=${profile.id}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` }, () => loadData())
         .subscribe();
+      channelsRef.current.push(notifsCh);
     }
-    return () => { transactionsSub.unsubscribe(); if (notifsSub) notifsSub.unsubscribe(); };
+
+    return () => {
+      channelsRef.current.forEach(ch => supabase.removeChannel(ch));
+      channelsRef.current = [];
+    };
   }, [profile?.id]);
 
   const markAsRead = async (id: string) => {

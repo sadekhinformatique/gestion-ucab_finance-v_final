@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
 import { useNavigate } from "react-router-dom";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export default function NotificationBell() {
   const { profile } = useAuth();
@@ -9,18 +10,23 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifChRef = useRef<RealtimeChannel | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!profile?.id) return;
     fetchNotifications();
-    const notifsSub = supabase
+
+    if (notifChRef.current) supabase.removeChannel(notifChRef.current);
+    notifChRef.current = supabase
       .channel(`public:notifications:user_id=${profile.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` }, () => {
         fetchNotifications();
       })
       .subscribe();
-    return () => { notifsSub.unsubscribe(); };
+    return () => {
+      if (notifChRef.current) supabase.removeChannel(notifChRef.current);
+    };
   }, [profile?.id]);
 
   useEffect(() => {
